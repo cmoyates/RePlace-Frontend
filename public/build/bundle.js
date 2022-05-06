@@ -3921,8 +3921,8 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[14] = list[i];
-    	child_ctx[16] = i;
+    	child_ctx[15] = list[i];
+    	child_ctx[17] = i;
     	return child_ctx;
     }
 
@@ -3934,16 +3934,16 @@ var app = (function () {
     	let dispose;
 
     	function click_handler() {
-    		return /*click_handler*/ ctx[7](/*index*/ ctx[16]);
+    		return /*click_handler*/ ctx[7](/*index*/ ctx[17]);
     	}
 
     	const block = {
     		c: function create() {
     			div = element("div");
     			attr_dev(div, "class", "colorButton svelte-1c960ta");
-    			attr_dev(div, "style", "background-color:" + /*color*/ ctx[14]);
-    			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[16] && "selected");
-    			add_location(div, file, 83, 2, 2418);
+    			attr_dev(div, "style", "background-color:" + /*color*/ ctx[15]);
+    			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[17] && "selected");
+    			add_location(div, file, 83, 2, 2478);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3956,7 +3956,7 @@ var app = (function () {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
 
-    			if (dirty & /*currentColor*/ 1 && div_id_value !== (div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[16] && "selected")) {
+    			if (dirty & /*currentColor*/ 1 && div_id_value !== (div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[17] && "selected")) {
     				attr_dev(div, "id", div_id_value);
     			}
     		},
@@ -4023,23 +4023,23 @@ var app = (function () {
     			}
 
     			attr_dev(span, "class", "place svelte-1c960ta");
-    			add_location(span, file, 67, 8, 2006);
+    			add_location(span, file, 67, 8, 2066);
     			attr_dev(h1, "class", "svelte-1c960ta");
-    			add_location(h1, file, 67, 1, 1999);
+    			add_location(h1, file, 67, 1, 2059);
     			attr_dev(a, "href", "https://www.reddit.com/r/place/");
-    			add_location(a, file, 68, 16, 2060);
-    			add_location(p, file, 68, 1, 2045);
+    			add_location(a, file, 68, 16, 2120);
+    			add_location(p, file, 68, 1, 2105);
     			attr_dev(canvas_1, "id", "myCanvas");
     			attr_dev(canvas_1, "width", "960");
     			attr_dev(canvas_1, "height", "540");
     			set_style(canvas_1, "opacity", /*$canvasOpacity*/ ctx[1]);
     			attr_dev(canvas_1, "class", "svelte-1c960ta");
-    			add_location(canvas_1, file, 69, 1, 2119);
+    			add_location(canvas_1, file, 69, 1, 2179);
     			attr_dev(main, "class", "svelte-1c960ta");
-    			add_location(main, file, 66, 0, 1991);
+    			add_location(main, file, 66, 0, 2051);
     			set_style(footer, "opacity", /*$footerOpacity*/ ctx[2]);
     			attr_dev(footer, "class", "svelte-1c960ta");
-    			add_location(footer, file, 77, 0, 2245);
+    			add_location(footer, file, 77, 0, 2305);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4166,7 +4166,8 @@ var app = (function () {
     	];
 
     	let currentColor = 0;
-    	let socket = lookup("http://localhost:5000");
+    	const BACKEND_URL = JSON.parse(JSON.stringify({"env":{"isProd":false,"BACKEND_URL":"https://replace-backend.herokuapp.com"}})).env.BACKEND_URL || "http://localhost:5000";
+    	let socket = lookup(BACKEND_URL);
 
     	socket.on("init", grid => {
     		const width = grid.length;
@@ -4233,6 +4234,7 @@ var app = (function () {
     		PIXEL_SIZE,
     		COLORS,
     		currentColor,
+    		BACKEND_URL,
     		socket,
     		setPixel,
     		getMousePos,

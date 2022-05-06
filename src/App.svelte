@@ -3,7 +3,6 @@
 	import { io, Socket } from "socket.io-client";
 	import { tweened } from "svelte/motion";
 	import { cubicOut } from 'svelte/easing';
-	import { fade } from 'svelte/transition';
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
@@ -30,8 +29,8 @@
 	]
 	let currentColor: number = 0;
 
-	let socket: Socket = io("http://localhost:5000");
-
+	const BACKEND_URL = JSON.parse(JSON.stringify(process)).env.BACKEND_URL || "http://localhost:5000";
+	let socket: Socket = io(BACKEND_URL);
 
 	socket.on("init", (grid: string[][]) => {
 		const width = grid.length;
