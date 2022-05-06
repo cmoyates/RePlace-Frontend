@@ -3707,12 +3707,12 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[9] = list[i];
-    	child_ctx[11] = i;
+    	child_ctx[12] = list[i];
+    	child_ctx[14] = i;
     	return child_ctx;
     }
 
-    // (67:1) {#each COLORS as color, index}
+    // (72:1) {#each COLORS as color, index}
     function create_each_block(ctx) {
     	let div;
     	let div_id_value;
@@ -3720,16 +3720,16 @@ var app = (function () {
     	let dispose;
 
     	function click_handler() {
-    		return /*click_handler*/ ctx[4](/*index*/ ctx[11]);
+    		return /*click_handler*/ ctx[5](/*index*/ ctx[14]);
     	}
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			attr_dev(div, "class", "colorButton svelte-12ssjor");
-    			attr_dev(div, "style", "background-color:" + /*color*/ ctx[9]);
-    			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[1] === /*index*/ ctx[11] && "selected");
-    			add_location(div, file, 67, 2, 1959);
+    			attr_dev(div, "class", "colorButton svelte-1kxuib6");
+    			attr_dev(div, "style", "background-color:" + /*color*/ ctx[12]);
+    			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[2] === /*index*/ ctx[14] && "selected");
+    			add_location(div, file, 72, 2, 2122);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3742,7 +3742,7 @@ var app = (function () {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
 
-    			if (dirty & /*currentColor*/ 2 && div_id_value !== (div_id_value = /*currentColor*/ ctx[1] === /*index*/ ctx[11] && "selected")) {
+    			if (dirty & /*currentColor*/ 4 && div_id_value !== (div_id_value = /*currentColor*/ ctx[2] === /*index*/ ctx[14] && "selected")) {
     				attr_dev(div, "id", div_id_value);
     			}
     		},
@@ -3757,7 +3757,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(67:1) {#each COLORS as color, index}",
+    		source: "(72:1) {#each COLORS as color, index}",
     		ctx
     	});
 
@@ -3778,9 +3778,10 @@ var app = (function () {
     	let canvas_1_class_value;
     	let t6;
     	let footer;
+    	let footer_id_value;
     	let mounted;
     	let dispose;
-    	let each_value = /*COLORS*/ ctx[2];
+    	let each_value = /*COLORS*/ ctx[3];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -3809,22 +3810,23 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr_dev(span, "class", "place svelte-12ssjor");
-    			add_location(span, file, 55, 8, 1668);
-    			attr_dev(h1, "class", "svelte-12ssjor");
-    			add_location(h1, file, 55, 1, 1661);
+    			attr_dev(span, "class", "place svelte-1kxuib6");
+    			add_location(span, file, 56, 8, 1693);
+    			attr_dev(h1, "class", "svelte-1kxuib6");
+    			add_location(h1, file, 56, 1, 1686);
     			attr_dev(a, "href", "https://www.reddit.com/r/place/");
-    			add_location(a, file, 56, 16, 1722);
-    			add_location(p, file, 56, 1, 1707);
+    			add_location(a, file, 57, 16, 1747);
+    			add_location(p, file, 57, 1, 1732);
     			attr_dev(canvas_1, "id", "myCanvas");
-    			attr_dev(canvas_1, "class", canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] ? "hide" : "show") + " svelte-12ssjor"));
-    			attr_dev(canvas_1, "width", "800");
-    			attr_dev(canvas_1, "height", "600");
-    			add_location(canvas_1, file, 57, 1, 1781);
-    			attr_dev(main, "class", "svelte-12ssjor");
-    			add_location(main, file, 54, 0, 1653);
-    			attr_dev(footer, "class", "svelte-12ssjor");
-    			add_location(footer, file, 65, 0, 1916);
+    			attr_dev(canvas_1, "class", canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] && "hiddenCanvas") + " svelte-1kxuib6"));
+    			attr_dev(canvas_1, "width", "960");
+    			attr_dev(canvas_1, "height", "540");
+    			add_location(canvas_1, file, 58, 1, 1806);
+    			attr_dev(main, "class", "svelte-1kxuib6");
+    			add_location(main, file, 55, 0, 1678);
+    			attr_dev(footer, "id", footer_id_value = /*showFooter*/ ctx[1] ? "shownFooter" : "hiddenFooter");
+    			attr_dev(footer, "class", "svelte-1kxuib6");
+    			add_location(footer, file, 66, 0, 1941);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3848,17 +3850,22 @@ var app = (function () {
     			}
 
     			if (!mounted) {
-    				dispose = listen_dev(canvas_1, "click", /*placePixel*/ ctx[3], false, false, false);
+    				dispose = [
+    					listen_dev(canvas_1, "click", /*placePixel*/ ctx[4], false, false, false),
+    					listen_dev(footer, "mouseenter", /*mouseenter_handler*/ ctx[6], false, false, false),
+    					listen_dev(footer, "mouseleave", /*mouseleave_handler*/ ctx[7], false, false, false)
+    				];
+
     				mounted = true;
     			}
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*loading*/ 1 && canvas_1_class_value !== (canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] ? "hide" : "show") + " svelte-12ssjor"))) {
+    			if (dirty & /*loading*/ 1 && canvas_1_class_value !== (canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] && "hiddenCanvas") + " svelte-1kxuib6"))) {
     				attr_dev(canvas_1, "class", canvas_1_class_value);
     			}
 
-    			if (dirty & /*COLORS, currentColor*/ 6) {
-    				each_value = /*COLORS*/ ctx[2];
+    			if (dirty & /*COLORS, currentColor*/ 12) {
+    				each_value = /*COLORS*/ ctx[3];
     				validate_each_argument(each_value);
     				let i;
 
@@ -3880,6 +3887,10 @@ var app = (function () {
 
     				each_blocks.length = each_value.length;
     			}
+
+    			if (dirty & /*showFooter*/ 2 && footer_id_value !== (footer_id_value = /*showFooter*/ ctx[1] ? "shownFooter" : "hiddenFooter")) {
+    				attr_dev(footer, "id", footer_id_value);
+    			}
     		},
     		i: noop,
     		o: noop,
@@ -3889,7 +3900,7 @@ var app = (function () {
     			if (detaching) detach_dev(footer);
     			destroy_each(each_blocks, detaching);
     			mounted = false;
-    			dispose();
+    			run_all(dispose);
     		}
     	};
 
@@ -3904,7 +3915,7 @@ var app = (function () {
     	return block;
     }
 
-    const PIXEL_SIZE = 20;
+    const PIXEL_SIZE = 15;
 
     // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
     function getMousePos(canvas, event, pixelSize) {
@@ -3922,6 +3933,7 @@ var app = (function () {
     	let canvas;
     	let ctx;
     	let loading = true;
+    	let showFooter = false;
 
     	const COLORS = [
     		"#ff0000",
@@ -3976,7 +3988,15 @@ var app = (function () {
     	});
 
     	const click_handler = index => {
-    		$$invalidate(1, currentColor = index);
+    		$$invalidate(2, currentColor = index);
+    	};
+
+    	const mouseenter_handler = () => {
+    		$$invalidate(1, showFooter = true);
+    	};
+
+    	const mouseleave_handler = () => {
+    		$$invalidate(1, showFooter = false);
     	};
 
     	$$self.$capture_state = () => ({
@@ -3985,6 +4005,7 @@ var app = (function () {
     		canvas,
     		ctx,
     		loading,
+    		showFooter,
     		PIXEL_SIZE,
     		COLORS,
     		currentColor,
@@ -3998,7 +4019,8 @@ var app = (function () {
     		if ('canvas' in $$props) canvas = $$props.canvas;
     		if ('ctx' in $$props) ctx = $$props.ctx;
     		if ('loading' in $$props) $$invalidate(0, loading = $$props.loading);
-    		if ('currentColor' in $$props) $$invalidate(1, currentColor = $$props.currentColor);
+    		if ('showFooter' in $$props) $$invalidate(1, showFooter = $$props.showFooter);
+    		if ('currentColor' in $$props) $$invalidate(2, currentColor = $$props.currentColor);
     		if ('socket' in $$props) socket = $$props.socket;
     	};
 
@@ -4006,7 +4028,16 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [loading, currentColor, COLORS, placePixel, click_handler];
+    	return [
+    		loading,
+    		showFooter,
+    		currentColor,
+    		COLORS,
+    		placePixel,
+    		click_handler,
+    		mouseenter_handler,
+    		mouseleave_handler
+    	];
     }
 
     class App extends SvelteComponentDev {

@@ -6,8 +6,9 @@
 	let ctx: CanvasRenderingContext2D;
 
 	let loading: boolean = true;
+	let showFooter: boolean = false;
 
-	const PIXEL_SIZE: number = 20;
+	const PIXEL_SIZE: number = 15;
 	const COLORS: string[] = [
 		"#ff0000",
 		"#ffff00",
@@ -70,13 +71,17 @@
 	<p>A remake of <a href="https://www.reddit.com/r/place/">r/Place</a></p>
 	<canvas 
 		id="myCanvas"
-		class={loading ? "hide" : "show"}
-		width="800" 
-		height="600"
+		class={loading && "hiddenCanvas"}
+		width="960" 
+		height="540"
 		on:click={placePixel}
 	></canvas>
 </main>
-<footer>
+<footer
+	id={showFooter ? "shownFooter" : "hiddenFooter"}
+	on:mouseenter={() => {showFooter = true}}
+	on:mouseleave={() => {showFooter = false}}
+>
 	{#each COLORS as color, index}
 		<div 
 			class="colorButton" 
@@ -106,8 +111,16 @@
 		color: #ff3e00;
 	}
 
-	.hide {
+	.hiddenCanvas {
 		display: none;
+	}
+
+	#hiddenFooter {
+		opacity: 0.1;
+	}
+
+	#shownFooter {
+		opacity: 1;
 	}
 
 	canvas {
