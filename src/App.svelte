@@ -5,11 +5,23 @@
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 
-	let loading = true;
+	let loading: boolean = true;
 
-	const PIXEL_SIZE = 20;
+	const PIXEL_SIZE: number = 20;
+	const COLORS: string[] = [
+		"#ff0000",
+		"#ffff00",
+		"#00ff00",
+		"#00ffff",
+		"#0000ff",
+		"#ff00ff",
+		"#ffffff",
+		"#000000"
+	]
+	let currentColor: number = 0;
 
 	let socket: Socket = io("http://localhost:5000");
+
 
 	socket.on("init", (grid) => {
 		for (let x = 0; x < 40; x++) {
@@ -47,9 +59,9 @@
 
 	function placePixel(event) {
 		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
-		setPixel(mousePos, "#ff0000");
+		setPixel(mousePos, COLORS[currentColor]);
 
-		socket.emit("place-pixel", mousePos, "#ff0000");
+		socket.emit("place-pixel", mousePos, COLORS[currentColor]);
 	}
 </script>
 
@@ -64,11 +76,21 @@
 		on:click={placePixel}
 	></canvas>
 </main>
+<footer>
+	{#each COLORS as color, index}
+		<div 
+			class="colorButton" 
+			style={"background-color:" + color}
+			id={currentColor === index && "selected"}
+			on:click={() => {currentColor = index}}
+		/>
+	{/each}
+</footer>
 
 <style>
 	main {
 		text-align: center;
-		padding: 1em;
+		padding: 2em;
 		max-width: 240px;
 		margin: 0 auto;
 	}
@@ -92,6 +114,29 @@
 		border: 1px;
 		border-color: black;
 		border-style: solid;
+	}
+
+	.colorButton {
+		width: 3em;
+		height: 3em;
+		margin: 1em;
+	}
+
+	#selected {
+		border: 4px;
+		border-color: gray;
+		border-style: solid;
+	}
+
+	footer {
+		position: fixed;
+		bottom: 0;
+		background-color: #000000de;
+		width: 100%;
+		color: white;
+		align-items: center;
+		justify-content: center;
+		display: flex;
 	}
 
 	@media (min-width: 640px) {
