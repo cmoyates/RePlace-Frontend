@@ -3703,14 +3703,14 @@ var app = (function () {
     			t1 = space();
     			canvas_1 = element("canvas");
     			attr_dev(h1, "class", "svelte-apd66l");
-    			add_location(h1, file, 36, 1, 1285);
+    			add_location(h1, file, 42, 1, 1424);
     			attr_dev(canvas_1, "id", "myCanvas");
     			attr_dev(canvas_1, "width", "640");
     			attr_dev(canvas_1, "height", "480");
     			attr_dev(canvas_1, "class", "svelte-apd66l");
-    			add_location(canvas_1, file, 37, 1, 1303);
+    			add_location(canvas_1, file, 43, 1, 1442);
     			attr_dev(main, "class", "svelte-apd66l");
-    			add_location(main, file, 35, 0, 1277);
+    			add_location(main, file, 41, 0, 1416);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3775,18 +3775,24 @@ var app = (function () {
     		}
     	});
 
+    	socket.on("pixel-placed-by-user", (pos, color) => {
+    		setPixel(pos, color);
+    	});
+
     	onMount(async () => {
     		canvas = document.getElementById("myCanvas");
     		ctx = canvas.getContext("2d");
     	});
 
+    	// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
+    	function setPixel(pos, color) {
+    		ctx.fillStyle = color;
+    		ctx.fillRect(pos.x * PIXEL_SIZE, pos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    	}
+
     	function placePixel(event) {
     		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
-
-    		// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
-    		ctx.fillStyle = "#ff0000";
-
-    		ctx.fillRect(mousePos.x * PIXEL_SIZE, mousePos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    		setPixel(mousePos, "#ff0000");
     		socket.emit("place-pixel", mousePos, "#ff0000");
     	}
 
@@ -3803,6 +3809,7 @@ var app = (function () {
     		ctx,
     		PIXEL_SIZE,
     		socket,
+    		setPixel,
     		getMousePos,
     		placePixel
     	});

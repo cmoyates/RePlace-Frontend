@@ -17,11 +17,21 @@
 			}
 		}
 	})
+
+	socket.on("pixel-placed-by-user", (pos, color) => {
+		setPixel(pos, color);
+	});
 	
 	onMount( async () => {
 		canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
 		ctx = canvas.getContext("2d");
 	});
+
+	// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
+	function setPixel(pos, color) {
+		ctx.fillStyle = color;
+		ctx.fillRect( pos.x * PIXEL_SIZE, pos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
+	}
 
 	// https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
 	function getMousePos(canvas, event, pixelSize) {
@@ -34,9 +44,7 @@
 
 	function placePixel(event) {
 		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
-		// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
-		ctx.fillStyle = "#ff0000";
-		ctx.fillRect( mousePos.x * PIXEL_SIZE, mousePos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
+		setPixel(mousePos, "#ff0000");
 
 		socket.emit("place-pixel", mousePos, "#ff0000");
 	}
