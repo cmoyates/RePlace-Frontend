@@ -3690,7 +3690,13 @@ var app = (function () {
     function create_fragment(ctx) {
     	let main;
     	let h1;
-    	let t1;
+    	let t0;
+    	let span;
+    	let t2;
+    	let p;
+    	let t3;
+    	let a;
+    	let t5;
     	let canvas_1;
     	let mounted;
     	let dispose;
@@ -3699,17 +3705,29 @@ var app = (function () {
     		c: function create() {
     			main = element("main");
     			h1 = element("h1");
-    			h1.textContent = "RePlace";
-    			t1 = space();
+    			t0 = text("Re/");
+    			span = element("span");
+    			span.textContent = "Place";
+    			t2 = space();
+    			p = element("p");
+    			t3 = text("A remake of ");
+    			a = element("a");
+    			a.textContent = "r/Place";
+    			t5 = space();
     			canvas_1 = element("canvas");
-    			attr_dev(h1, "class", "svelte-apd66l");
+    			attr_dev(span, "class", "place svelte-2zm86o");
+    			add_location(span, file, 42, 8, 1431);
+    			attr_dev(h1, "class", "svelte-2zm86o");
     			add_location(h1, file, 42, 1, 1424);
+    			attr_dev(a, "href", "https://www.reddit.com/r/place/");
+    			add_location(a, file, 43, 16, 1485);
+    			add_location(p, file, 43, 1, 1470);
     			attr_dev(canvas_1, "id", "myCanvas");
     			attr_dev(canvas_1, "width", "640");
     			attr_dev(canvas_1, "height", "480");
-    			attr_dev(canvas_1, "class", "svelte-apd66l");
-    			add_location(canvas_1, file, 43, 1, 1442);
-    			attr_dev(main, "class", "svelte-apd66l");
+    			attr_dev(canvas_1, "class", "svelte-2zm86o");
+    			add_location(canvas_1, file, 44, 1, 1544);
+    			attr_dev(main, "class", "svelte-2zm86o");
     			add_location(main, file, 41, 0, 1416);
     		},
     		l: function claim(nodes) {
@@ -3718,7 +3736,13 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			insert_dev(target, main, anchor);
     			append_dev(main, h1);
-    			append_dev(main, t1);
+    			append_dev(h1, t0);
+    			append_dev(h1, span);
+    			append_dev(main, t2);
+    			append_dev(main, p);
+    			append_dev(p, t3);
+    			append_dev(p, a);
+    			append_dev(main, t5);
     			append_dev(main, canvas_1);
 
     			if (!mounted) {

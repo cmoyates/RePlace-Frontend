@@ -51,7 +51,8 @@
 </script>
 
 <main>
-	<h1>RePlace</h1>
+	<h1>Re/<span class="place">Place</span></h1>
+	<p>A remake of <a href="https://www.reddit.com/r/place/">r/Place</a></p>
 	<canvas 
 		id="myCanvas" 
 		width="640" 
@@ -69,10 +70,14 @@
 	}
 
 	h1 {
-		color: #ff3e00;
 		text-transform: uppercase;
 		font-size: 4em;
 		font-weight: 100;
+		margin-bottom: auto;
+	}
+
+	.place {
+		color: #ff3e00;
 	}
 
 	canvas {
