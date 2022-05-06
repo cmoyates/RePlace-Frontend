@@ -1,12 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { io, Socket } from "socket.io-client";
+	import { tweened } from "svelte/motion";
+	import { cubicOut } from 'svelte/easing';
+	import { fade } from 'svelte/transition';
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 
-	let loading: boolean = true;
-	let showFooter: boolean = false;
+	let footerOpacity = tweened(0.05, {
+		duration: 300,
+		easing: cubicOut
+	});
+	let canvasOpacity = tweened(0, {
+		duration: 400,
+		easing: cubicOut
+	});
 
 	const PIXEL_SIZE: number = 15;
 	const COLORS: string[] = [
@@ -31,7 +40,7 @@
 				ctx.fillRect( x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
 			}
 		}
-		loading = false;
+		canvasOpacity.set(1);
 	})
 
 	socket.on("pixel-placed-by-user", (pos, color) => {
@@ -71,16 +80,16 @@
 	<p>A remake of <a href="https://www.reddit.com/r/place/">r/Place</a></p>
 	<canvas 
 		id="myCanvas"
-		class={loading && "hiddenCanvas"}
 		width="960" 
 		height="540"
 		on:click={placePixel}
-	></canvas>
+		style="opacity:{$canvasOpacity}"
+	/>
 </main>
 <footer
-	id={showFooter ? "shownFooter" : "hiddenFooter"}
-	on:mouseenter={() => {showFooter = true}}
-	on:mouseleave={() => {showFooter = false}}
+	style="opacity:{$footerOpacity}"
+	on:mouseenter={() => {footerOpacity.set(1)}}
+	on:mouseleave={() => {footerOpacity.set(0.05)}}
 >
 	{#each COLORS as color, index}
 		<div 
@@ -109,18 +118,6 @@
 
 	.place {
 		color: #ff3e00;
-	}
-
-	.hiddenCanvas {
-		display: none;
-	}
-
-	#hiddenFooter {
-		opacity: 0.1;
-	}
-
-	#shownFooter {
-		opacity: 1;
 	}
 
 	canvas {

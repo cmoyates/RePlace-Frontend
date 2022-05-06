@@ -4,6 +4,13 @@ var app = (function () {
     'use strict';
 
     function noop() { }
+    const identity = x => x;
+    function assign(tar, src) {
+        // @ts-ignore
+        for (const k in src)
+            tar[k] = src[k];
+        return tar;
+    }
     function add_location(element, file, line, column, char) {
         element.__svelte_meta = {
             loc: { file, line, column, char }
@@ -27,8 +34,55 @@ var app = (function () {
     function is_empty(obj) {
         return Object.keys(obj).length === 0;
     }
-    function null_to_empty(value) {
-        return value == null ? '' : value;
+    function validate_store(store, name) {
+        if (store != null && typeof store.subscribe !== 'function') {
+            throw new Error(`'${name}' is not a store with a 'subscribe' method`);
+        }
+    }
+    function subscribe(store, ...callbacks) {
+        if (store == null) {
+            return noop;
+        }
+        const unsub = store.subscribe(...callbacks);
+        return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
+    }
+    function component_subscribe(component, store, callback) {
+        component.$$.on_destroy.push(subscribe(store, callback));
+    }
+
+    const is_client = typeof window !== 'undefined';
+    let now = is_client
+        ? () => window.performance.now()
+        : () => Date.now();
+    let raf = is_client ? cb => requestAnimationFrame(cb) : noop;
+
+    const tasks = new Set();
+    function run_tasks(now) {
+        tasks.forEach(task => {
+            if (!task.c(now)) {
+                tasks.delete(task);
+                task.f();
+            }
+        });
+        if (tasks.size !== 0)
+            raf(run_tasks);
+    }
+    /**
+     * Creates a new task that runs on each raf frame
+     * until it returns a falsy value or is aborted
+     */
+    function loop(callback) {
+        let task;
+        if (tasks.size === 0)
+            raf(run_tasks);
+        return {
+            promise: new Promise(fulfill => {
+                tasks.add(task = { c: callback, f: fulfill });
+            }),
+            abort() {
+                tasks.delete(task);
+            }
+        };
     }
     function append(target, node) {
         target.appendChild(node);
@@ -66,6 +120,14 @@ var app = (function () {
     }
     function children(element) {
         return Array.from(element.childNodes);
+    }
+    function set_style(node, key, value, important) {
+        if (value === null) {
+            node.style.removeProperty(key);
+        }
+        else {
+            node.style.setProperty(key, value, important ? 'important' : '');
+        }
     }
     function custom_event(type, detail, { bubbles = false, cancelable = false } = {}) {
         const e = document.createEvent('CustomEvent');
@@ -3702,17 +3764,169 @@ var app = (function () {
         connect: lookup,
     });
 
+    const subscriber_queue = [];
+    /**
+     * Create a `Writable` store that allows both updating and reading by subscription.
+     * @param {*=}value initial value
+     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
+     */
+    function writable(value, start = noop) {
+        let stop;
+        const subscribers = new Set();
+        function set(new_value) {
+            if (safe_not_equal(value, new_value)) {
+                value = new_value;
+                if (stop) { // store is ready
+                    const run_queue = !subscriber_queue.length;
+                    for (const subscriber of subscribers) {
+                        subscriber[1]();
+                        subscriber_queue.push(subscriber, value);
+                    }
+                    if (run_queue) {
+                        for (let i = 0; i < subscriber_queue.length; i += 2) {
+                            subscriber_queue[i][0](subscriber_queue[i + 1]);
+                        }
+                        subscriber_queue.length = 0;
+                    }
+                }
+            }
+        }
+        function update(fn) {
+            set(fn(value));
+        }
+        function subscribe(run, invalidate = noop) {
+            const subscriber = [run, invalidate];
+            subscribers.add(subscriber);
+            if (subscribers.size === 1) {
+                stop = start(set) || noop;
+            }
+            run(value);
+            return () => {
+                subscribers.delete(subscriber);
+                if (subscribers.size === 0) {
+                    stop();
+                    stop = null;
+                }
+            };
+        }
+        return { set, update, subscribe };
+    }
+
+    function cubicOut(t) {
+        const f = t - 1.0;
+        return f * f * f + 1.0;
+    }
+
+    function is_date(obj) {
+        return Object.prototype.toString.call(obj) === '[object Date]';
+    }
+
+    function get_interpolator(a, b) {
+        if (a === b || a !== a)
+            return () => a;
+        const type = typeof a;
+        if (type !== typeof b || Array.isArray(a) !== Array.isArray(b)) {
+            throw new Error('Cannot interpolate values of different type');
+        }
+        if (Array.isArray(a)) {
+            const arr = b.map((bi, i) => {
+                return get_interpolator(a[i], bi);
+            });
+            return t => arr.map(fn => fn(t));
+        }
+        if (type === 'object') {
+            if (!a || !b)
+                throw new Error('Object cannot be null');
+            if (is_date(a) && is_date(b)) {
+                a = a.getTime();
+                b = b.getTime();
+                const delta = b - a;
+                return t => new Date(a + t * delta);
+            }
+            const keys = Object.keys(b);
+            const interpolators = {};
+            keys.forEach(key => {
+                interpolators[key] = get_interpolator(a[key], b[key]);
+            });
+            return t => {
+                const result = {};
+                keys.forEach(key => {
+                    result[key] = interpolators[key](t);
+                });
+                return result;
+            };
+        }
+        if (type === 'number') {
+            const delta = b - a;
+            return t => a + t * delta;
+        }
+        throw new Error(`Cannot interpolate ${type} values`);
+    }
+    function tweened(value, defaults = {}) {
+        const store = writable(value);
+        let task;
+        let target_value = value;
+        function set(new_value, opts) {
+            if (value == null) {
+                store.set(value = new_value);
+                return Promise.resolve();
+            }
+            target_value = new_value;
+            let previous_task = task;
+            let started = false;
+            let { delay = 0, duration = 400, easing = identity, interpolate = get_interpolator } = assign(assign({}, defaults), opts);
+            if (duration === 0) {
+                if (previous_task) {
+                    previous_task.abort();
+                    previous_task = null;
+                }
+                store.set(value = target_value);
+                return Promise.resolve();
+            }
+            const start = now() + delay;
+            let fn;
+            task = loop(now => {
+                if (now < start)
+                    return true;
+                if (!started) {
+                    fn = interpolate(value, new_value);
+                    if (typeof duration === 'function')
+                        duration = duration(value, new_value);
+                    started = true;
+                }
+                if (previous_task) {
+                    previous_task.abort();
+                    previous_task = null;
+                }
+                const elapsed = now - start;
+                if (elapsed > duration) {
+                    store.set(value = new_value);
+                    return false;
+                }
+                // @ts-ignore
+                store.set(value = fn(easing(elapsed / duration)));
+                return true;
+            });
+            return task.promise;
+        }
+        return {
+            set,
+            update: (fn, opts) => set(fn(target_value, value), opts),
+            subscribe: store.subscribe
+        };
+    }
+
     /* src\App.svelte generated by Svelte v3.48.0 */
     const file = "src\\App.svelte";
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[12] = list[i];
-    	child_ctx[14] = i;
+    	child_ctx[14] = list[i];
+    	child_ctx[16] = i;
     	return child_ctx;
     }
 
-    // (72:1) {#each COLORS as color, index}
+    // (81:1) {#each COLORS as color, index}
     function create_each_block(ctx) {
     	let div;
     	let div_id_value;
@@ -3720,16 +3934,16 @@ var app = (function () {
     	let dispose;
 
     	function click_handler() {
-    		return /*click_handler*/ ctx[5](/*index*/ ctx[14]);
+    		return /*click_handler*/ ctx[7](/*index*/ ctx[16]);
     	}
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			attr_dev(div, "class", "colorButton svelte-1kxuib6");
-    			attr_dev(div, "style", "background-color:" + /*color*/ ctx[12]);
-    			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[2] === /*index*/ ctx[14] && "selected");
-    			add_location(div, file, 72, 2, 2122);
+    			attr_dev(div, "class", "colorButton svelte-1c960ta");
+    			attr_dev(div, "style", "background-color:" + /*color*/ ctx[14]);
+    			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[16] && "selected");
+    			add_location(div, file, 81, 2, 2343);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3742,7 +3956,7 @@ var app = (function () {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
 
-    			if (dirty & /*currentColor*/ 4 && div_id_value !== (div_id_value = /*currentColor*/ ctx[2] === /*index*/ ctx[14] && "selected")) {
+    			if (dirty & /*currentColor*/ 1 && div_id_value !== (div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[16] && "selected")) {
     				attr_dev(div, "id", div_id_value);
     			}
     		},
@@ -3757,7 +3971,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(72:1) {#each COLORS as color, index}",
+    		source: "(81:1) {#each COLORS as color, index}",
     		ctx
     	});
 
@@ -3775,13 +3989,11 @@ var app = (function () {
     	let a;
     	let t5;
     	let canvas_1;
-    	let canvas_1_class_value;
     	let t6;
     	let footer;
-    	let footer_id_value;
     	let mounted;
     	let dispose;
-    	let each_value = /*COLORS*/ ctx[3];
+    	let each_value = /*COLORS*/ ctx[5];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -3810,23 +4022,24 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr_dev(span, "class", "place svelte-1kxuib6");
-    			add_location(span, file, 56, 8, 1693);
-    			attr_dev(h1, "class", "svelte-1kxuib6");
-    			add_location(h1, file, 56, 1, 1686);
+    			attr_dev(span, "class", "place svelte-1c960ta");
+    			add_location(span, file, 65, 8, 1931);
+    			attr_dev(h1, "class", "svelte-1c960ta");
+    			add_location(h1, file, 65, 1, 1924);
     			attr_dev(a, "href", "https://www.reddit.com/r/place/");
-    			add_location(a, file, 57, 16, 1747);
-    			add_location(p, file, 57, 1, 1732);
+    			add_location(a, file, 66, 16, 1985);
+    			add_location(p, file, 66, 1, 1970);
     			attr_dev(canvas_1, "id", "myCanvas");
-    			attr_dev(canvas_1, "class", canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] && "hiddenCanvas") + " svelte-1kxuib6"));
     			attr_dev(canvas_1, "width", "960");
     			attr_dev(canvas_1, "height", "540");
-    			add_location(canvas_1, file, 58, 1, 1806);
-    			attr_dev(main, "class", "svelte-1kxuib6");
-    			add_location(main, file, 55, 0, 1678);
-    			attr_dev(footer, "id", footer_id_value = /*showFooter*/ ctx[1] ? "shownFooter" : "hiddenFooter");
-    			attr_dev(footer, "class", "svelte-1kxuib6");
-    			add_location(footer, file, 66, 0, 1941);
+    			set_style(canvas_1, "opacity", /*$canvasOpacity*/ ctx[1]);
+    			attr_dev(canvas_1, "class", "svelte-1c960ta");
+    			add_location(canvas_1, file, 67, 1, 2044);
+    			attr_dev(main, "class", "svelte-1c960ta");
+    			add_location(main, file, 64, 0, 1916);
+    			set_style(footer, "opacity", /*$footerOpacity*/ ctx[2]);
+    			attr_dev(footer, "class", "svelte-1c960ta");
+    			add_location(footer, file, 75, 0, 2170);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3851,21 +4064,21 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(canvas_1, "click", /*placePixel*/ ctx[4], false, false, false),
-    					listen_dev(footer, "mouseenter", /*mouseenter_handler*/ ctx[6], false, false, false),
-    					listen_dev(footer, "mouseleave", /*mouseleave_handler*/ ctx[7], false, false, false)
+    					listen_dev(canvas_1, "click", /*placePixel*/ ctx[6], false, false, false),
+    					listen_dev(footer, "mouseenter", /*mouseenter_handler*/ ctx[8], false, false, false),
+    					listen_dev(footer, "mouseleave", /*mouseleave_handler*/ ctx[9], false, false, false)
     				];
 
     				mounted = true;
     			}
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*loading*/ 1 && canvas_1_class_value !== (canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] && "hiddenCanvas") + " svelte-1kxuib6"))) {
-    				attr_dev(canvas_1, "class", canvas_1_class_value);
+    			if (dirty & /*$canvasOpacity*/ 2) {
+    				set_style(canvas_1, "opacity", /*$canvasOpacity*/ ctx[1]);
     			}
 
-    			if (dirty & /*COLORS, currentColor*/ 12) {
-    				each_value = /*COLORS*/ ctx[3];
+    			if (dirty & /*COLORS, currentColor*/ 33) {
+    				each_value = /*COLORS*/ ctx[5];
     				validate_each_argument(each_value);
     				let i;
 
@@ -3888,8 +4101,8 @@ var app = (function () {
     				each_blocks.length = each_value.length;
     			}
 
-    			if (dirty & /*showFooter*/ 2 && footer_id_value !== (footer_id_value = /*showFooter*/ ctx[1] ? "shownFooter" : "hiddenFooter")) {
-    				attr_dev(footer, "id", footer_id_value);
+    			if (dirty & /*$footerOpacity*/ 4) {
+    				set_style(footer, "opacity", /*$footerOpacity*/ ctx[2]);
     			}
     		},
     		i: noop,
@@ -3928,12 +4141,18 @@ var app = (function () {
     }
 
     function instance($$self, $$props, $$invalidate) {
+    	let $canvasOpacity;
+    	let $footerOpacity;
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
     	let canvas;
     	let ctx;
-    	let loading = true;
-    	let showFooter = false;
+    	let footerOpacity = tweened(0.05, { duration: 300, easing: cubicOut });
+    	validate_store(footerOpacity, 'footerOpacity');
+    	component_subscribe($$self, footerOpacity, value => $$invalidate(2, $footerOpacity = value));
+    	let canvasOpacity = tweened(0, { duration: 400, easing: cubicOut });
+    	validate_store(canvasOpacity, 'canvasOpacity');
+    	component_subscribe($$self, canvasOpacity, value => $$invalidate(1, $canvasOpacity = value));
 
     	const COLORS = [
     		"#ff0000",
@@ -3957,7 +4176,7 @@ var app = (function () {
     			}
     		}
 
-    		$$invalidate(0, loading = false);
+    		canvasOpacity.set(1);
     	});
 
     	socket.on("pixel-placed-by-user", (pos, color) => {
@@ -3988,39 +4207,43 @@ var app = (function () {
     	});
 
     	const click_handler = index => {
-    		$$invalidate(2, currentColor = index);
+    		$$invalidate(0, currentColor = index);
     	};
 
     	const mouseenter_handler = () => {
-    		$$invalidate(1, showFooter = true);
+    		footerOpacity.set(1);
     	};
 
     	const mouseleave_handler = () => {
-    		$$invalidate(1, showFooter = false);
+    		footerOpacity.set(0.05);
     	};
 
     	$$self.$capture_state = () => ({
     		onMount,
     		io: lookup,
+    		tweened,
+    		cubicOut,
     		canvas,
     		ctx,
-    		loading,
-    		showFooter,
+    		footerOpacity,
+    		canvasOpacity,
     		PIXEL_SIZE,
     		COLORS,
     		currentColor,
     		socket,
     		setPixel,
     		getMousePos,
-    		placePixel
+    		placePixel,
+    		$canvasOpacity,
+    		$footerOpacity
     	});
 
     	$$self.$inject_state = $$props => {
     		if ('canvas' in $$props) canvas = $$props.canvas;
     		if ('ctx' in $$props) ctx = $$props.ctx;
-    		if ('loading' in $$props) $$invalidate(0, loading = $$props.loading);
-    		if ('showFooter' in $$props) $$invalidate(1, showFooter = $$props.showFooter);
-    		if ('currentColor' in $$props) $$invalidate(2, currentColor = $$props.currentColor);
+    		if ('footerOpacity' in $$props) $$invalidate(3, footerOpacity = $$props.footerOpacity);
+    		if ('canvasOpacity' in $$props) $$invalidate(4, canvasOpacity = $$props.canvasOpacity);
+    		if ('currentColor' in $$props) $$invalidate(0, currentColor = $$props.currentColor);
     		if ('socket' in $$props) socket = $$props.socket;
     	};
 
@@ -4029,9 +4252,11 @@ var app = (function () {
     	}
 
     	return [
-    		loading,
-    		showFooter,
     		currentColor,
+    		$canvasOpacity,
+    		$footerOpacity,
+    		footerOpacity,
+    		canvasOpacity,
     		COLORS,
     		placePixel,
     		click_handler,
