@@ -1,10 +1,41 @@
 <script lang="ts">
-	export let name: string;
+	import { onMount } from 'svelte';
+
+	let canvas: HTMLCanvasElement;
+	let ctx: CanvasRenderingContext2D;
+
+	const PIXEL_SIZE = 16;
+	
+	onMount( async () => {
+		canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
+		ctx = canvas.getContext("2d");
+	});
+
+	// https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
+	function getMousePos(canvas, event, pixelSize) {
+		var rect = canvas.getBoundingClientRect();
+		return {
+			x: Math.floor((event.clientX - rect.left) / pixelSize),
+			y: Math.floor((event.clientY - rect.top) / pixelSize)
+		};
+	}
+
+	function placePixel(event) {
+		let mousePos = getMousePos(canvas, event, PIXEL_SIZE)
+		// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
+		ctx.fillStyle = `rgb(${255}, ${0}, ${0})`;
+		ctx.fillRect( mousePos.x * PIXEL_SIZE, mousePos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
+	}
 </script>
 
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+	<h1>RePlace</h1>
+	<canvas 
+		id="myCanvas" 
+		width="640" 
+		height="480"
+		on:click={placePixel}
+	></canvas>
 </main>
 
 <style>
@@ -20,6 +51,12 @@
 		text-transform: uppercase;
 		font-size: 4em;
 		font-weight: 100;
+	}
+
+	canvas {
+		border: 1px;
+		border-color: black;
+		border-style: solid;
 	}
 
 	@media (min-width: 640px) {
