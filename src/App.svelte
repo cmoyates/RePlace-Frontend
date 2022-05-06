@@ -10,8 +10,6 @@
 	let socket: Socket = io("http://localhost:5000");
 
 	socket.on("init", (grid) => {
-		console.log("test");
-
 		for (let x = 0; x < 40; x++) {
 			for (let y = 0; y < 30; y++) {
 				ctx.fillStyle = grid[x][y];
