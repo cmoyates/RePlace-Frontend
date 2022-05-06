@@ -5,15 +5,24 @@
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 
-	let socket: Socket;
-
 	const PIXEL_SIZE = 16;
+
+	let socket: Socket = io("http://localhost:5000");
+
+	socket.on("init", (grid) => {
+		console.log("test");
+
+		for (let x = 0; x < 40; x++) {
+			for (let y = 0; y < 30; y++) {
+				ctx.fillStyle = grid[x][y];
+				ctx.fillRect( x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
+			}
+		}
+	})
 	
 	onMount( async () => {
 		canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
 		ctx = canvas.getContext("2d");
-
-		socket = io("http://localhost:5000");
 	});
 
 	// https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
