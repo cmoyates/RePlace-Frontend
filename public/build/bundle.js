@@ -3703,14 +3703,14 @@ var app = (function () {
     			t1 = space();
     			canvas_1 = element("canvas");
     			attr_dev(h1, "class", "svelte-apd66l");
-    			add_location(h1, file, 29, 1, 1082);
+    			add_location(h1, file, 29, 1, 1044);
     			attr_dev(canvas_1, "id", "myCanvas");
     			attr_dev(canvas_1, "width", "640");
     			attr_dev(canvas_1, "height", "480");
     			attr_dev(canvas_1, "class", "svelte-apd66l");
-    			add_location(canvas_1, file, 30, 1, 1100);
+    			add_location(canvas_1, file, 30, 1, 1062);
     			attr_dev(main, "class", "svelte-apd66l");
-    			add_location(main, file, 28, 0, 1074);
+    			add_location(main, file, 28, 0, 1036);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3776,10 +3776,10 @@ var app = (function () {
     		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
 
     		// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
-    		ctx.fillStyle = `rgb(${255}, ${0}, ${0})`;
+    		ctx.fillStyle = "#ff0000";
 
     		ctx.fillRect(mousePos.x * PIXEL_SIZE, mousePos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
-    		socket.emit("place-pixel", mousePos, { red: 255, green: 0, blue: 0 });
+    		socket.emit("place-pixel", mousePos, "#ff0000");
     	}
 
     	const writable_props = [];

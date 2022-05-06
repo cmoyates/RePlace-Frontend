@@ -28,10 +28,10 @@
 	function placePixel(event) {
 		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
 		// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
-		ctx.fillStyle = `rgb(${255}, ${0}, ${0})`;
+		ctx.fillStyle = "#ff0000";
 		ctx.fillRect( mousePos.x * PIXEL_SIZE, mousePos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
 
-		socket.emit("place-pixel", mousePos, {red: 255, green: 0, blue: 0});
+		socket.emit("place-pixel", mousePos, "#ff0000");
 	}
 </script>
 
