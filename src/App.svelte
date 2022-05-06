@@ -33,9 +33,11 @@
 	let socket: Socket = io("http://localhost:5000");
 
 
-	socket.on("init", (grid) => {
-		for (let x = 0; x < 40; x++) {
-			for (let y = 0; y < 30; y++) {
+	socket.on("init", (grid: string[][]) => {
+		const width = grid.length;
+		const height = grid[0].length;
+		for (let x = 0; x < width; x++) {
+			for (let y = 0; y < height; y++) {
 				ctx.fillStyle = grid[x][y];
 				ctx.fillRect( x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
 			}
