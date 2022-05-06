@@ -27,6 +27,9 @@ var app = (function () {
     function is_empty(obj) {
         return Object.keys(obj).length === 0;
     }
+    function null_to_empty(value) {
+        return value == null ? '' : value;
+    }
     function append(target, node) {
         target.appendChild(node);
     }
@@ -3698,6 +3701,7 @@ var app = (function () {
     	let a;
     	let t5;
     	let canvas_1;
+    	let canvas_1_class_value;
     	let mounted;
     	let dispose;
 
@@ -3715,20 +3719,20 @@ var app = (function () {
     			a.textContent = "r/Place";
     			t5 = space();
     			canvas_1 = element("canvas");
-    			attr_dev(span, "class", "place svelte-2zm86o");
-    			add_location(span, file, 42, 8, 1431);
-    			attr_dev(h1, "class", "svelte-2zm86o");
-    			add_location(h1, file, 42, 1, 1424);
+    			attr_dev(span, "class", "place svelte-153wkt9");
+    			add_location(span, file, 44, 8, 1474);
+    			attr_dev(h1, "class", "svelte-153wkt9");
+    			add_location(h1, file, 44, 1, 1467);
     			attr_dev(a, "href", "https://www.reddit.com/r/place/");
-    			add_location(a, file, 43, 16, 1485);
-    			add_location(p, file, 43, 1, 1470);
+    			add_location(a, file, 45, 16, 1528);
+    			add_location(p, file, 45, 1, 1513);
     			attr_dev(canvas_1, "id", "myCanvas");
-    			attr_dev(canvas_1, "width", "640");
-    			attr_dev(canvas_1, "height", "480");
-    			attr_dev(canvas_1, "class", "svelte-2zm86o");
-    			add_location(canvas_1, file, 44, 1, 1544);
-    			attr_dev(main, "class", "svelte-2zm86o");
-    			add_location(main, file, 41, 0, 1416);
+    			attr_dev(canvas_1, "class", canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] ? "hide" : "show") + " svelte-153wkt9"));
+    			attr_dev(canvas_1, "width", "800");
+    			attr_dev(canvas_1, "height", "600");
+    			add_location(canvas_1, file, 46, 1, 1587);
+    			attr_dev(main, "class", "svelte-153wkt9");
+    			add_location(main, file, 43, 0, 1459);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3746,11 +3750,15 @@ var app = (function () {
     			append_dev(main, canvas_1);
 
     			if (!mounted) {
-    				dispose = listen_dev(canvas_1, "click", /*placePixel*/ ctx[0], false, false, false);
+    				dispose = listen_dev(canvas_1, "click", /*placePixel*/ ctx[1], false, false, false);
     				mounted = true;
     			}
     		},
-    		p: noop,
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*loading*/ 1 && canvas_1_class_value !== (canvas_1_class_value = "" + (null_to_empty(/*loading*/ ctx[0] ? "hide" : "show") + " svelte-153wkt9"))) {
+    				attr_dev(canvas_1, "class", canvas_1_class_value);
+    			}
+    		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
@@ -3771,7 +3779,7 @@ var app = (function () {
     	return block;
     }
 
-    const PIXEL_SIZE = 16;
+    const PIXEL_SIZE = 20;
 
     // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
     function getMousePos(canvas, event, pixelSize) {
@@ -3788,6 +3796,7 @@ var app = (function () {
     	validate_slots('App', slots, []);
     	let canvas;
     	let ctx;
+    	let loading = true;
     	let socket = lookup("http://localhost:5000");
 
     	socket.on("init", grid => {
@@ -3797,6 +3806,8 @@ var app = (function () {
     				ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
     			}
     		}
+
+    		$$invalidate(0, loading = false);
     	});
 
     	socket.on("pixel-placed-by-user", (pos, color) => {
@@ -3831,6 +3842,7 @@ var app = (function () {
     		io: lookup,
     		canvas,
     		ctx,
+    		loading,
     		PIXEL_SIZE,
     		socket,
     		setPixel,
@@ -3841,6 +3853,7 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ('canvas' in $$props) canvas = $$props.canvas;
     		if ('ctx' in $$props) ctx = $$props.ctx;
+    		if ('loading' in $$props) $$invalidate(0, loading = $$props.loading);
     		if ('socket' in $$props) socket = $$props.socket;
     	};
 
@@ -3848,7 +3861,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [placePixel];
+    	return [loading, placePixel];
     }
 
     class App extends SvelteComponentDev {

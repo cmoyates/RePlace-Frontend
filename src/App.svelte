@@ -5,7 +5,9 @@
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 
-	const PIXEL_SIZE = 16;
+	let loading = true;
+
+	const PIXEL_SIZE = 20;
 
 	let socket: Socket = io("http://localhost:5000");
 
@@ -16,6 +18,7 @@
 				ctx.fillRect( x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
 			}
 		}
+		loading = false;
 	})
 
 	socket.on("pixel-placed-by-user", (pos, color) => {
@@ -54,9 +57,10 @@
 	<h1>Re/<span class="place">Place</span></h1>
 	<p>A remake of <a href="https://www.reddit.com/r/place/">r/Place</a></p>
 	<canvas 
-		id="myCanvas" 
-		width="640" 
-		height="480"
+		id="myCanvas"
+		class={loading ? "hide" : "show"}
+		width="800" 
+		height="600"
 		on:click={placePixel}
 	></canvas>
 </main>
@@ -78,6 +82,10 @@
 
 	.place {
 		color: #ff3e00;
+	}
+
+	.hide {
+		display: none;
 	}
 
 	canvas {
