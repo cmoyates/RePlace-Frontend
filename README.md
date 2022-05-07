@@ -1,4 +1,4 @@
-# Re/Place-Frontend
+# Re/Place Frontend
 This is a remake of [r/Place](https://www.reddit.com/r/place/).
 
 See it in action here: https://replace-frontend.vercel.app/
