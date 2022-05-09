@@ -3926,7 +3926,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (83:1) {#each COLORS as color, index}
+    // (85:1) {#each COLORS as color, index}
     function create_each_block(ctx) {
     	let div;
     	let div_id_value;
@@ -3943,7 +3943,7 @@ var app = (function () {
     			attr_dev(div, "class", "colorButton svelte-1c960ta");
     			attr_dev(div, "style", "background-color:" + /*color*/ ctx[15]);
     			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[17] && "selected");
-    			add_location(div, file, 83, 2, 2478);
+    			add_location(div, file, 85, 2, 2469);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3971,7 +3971,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(83:1) {#each COLORS as color, index}",
+    		source: "(85:1) {#each COLORS as color, index}",
     		ctx
     	});
 
@@ -4023,23 +4023,23 @@ var app = (function () {
     			}
 
     			attr_dev(span, "class", "place svelte-1c960ta");
-    			add_location(span, file, 67, 8, 2066);
+    			add_location(span, file, 69, 8, 2057);
     			attr_dev(h1, "class", "svelte-1c960ta");
-    			add_location(h1, file, 67, 1, 2059);
+    			add_location(h1, file, 69, 1, 2050);
     			attr_dev(a, "href", "https://www.reddit.com/r/place/");
-    			add_location(a, file, 68, 16, 2120);
-    			add_location(p, file, 68, 1, 2105);
+    			add_location(a, file, 70, 16, 2111);
+    			add_location(p, file, 70, 1, 2096);
     			attr_dev(canvas_1, "id", "myCanvas");
     			attr_dev(canvas_1, "width", "960");
     			attr_dev(canvas_1, "height", "540");
     			set_style(canvas_1, "opacity", /*$canvasOpacity*/ ctx[1]);
     			attr_dev(canvas_1, "class", "svelte-1c960ta");
-    			add_location(canvas_1, file, 69, 1, 2179);
+    			add_location(canvas_1, file, 71, 1, 2170);
     			attr_dev(main, "class", "svelte-1c960ta");
-    			add_location(main, file, 66, 0, 2051);
+    			add_location(main, file, 68, 0, 2042);
     			set_style(footer, "opacity", /*$footerOpacity*/ ctx[2]);
     			attr_dev(footer, "class", "svelte-1c960ta");
-    			add_location(footer, file, 77, 0, 2305);
+    			add_location(footer, file, 79, 0, 2296);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4172,11 +4172,14 @@ var app = (function () {
     	socket.on("init", grid => {
     		const width = grid.length;
     		const height = grid[0].length;
+    		let pos = { x: 0, y: 0 };
 
     		for (let x = 0; x < width; x++) {
+    			pos.x = x;
+
     			for (let y = 0; y < height; y++) {
-    				ctx.fillStyle = grid[x][y];
-    				ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    				pos.y = y;
+    				setPixel(pos, grid[x][y]);
     			}
     		}
 

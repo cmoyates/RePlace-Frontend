@@ -35,10 +35,12 @@
 	socket.on("init", (grid: string[][]) => {
 		const width = grid.length;
 		const height = grid[0].length;
+		let pos = {x: 0, y: 0};
 		for (let x = 0; x < width; x++) {
+			pos.x = x;
 			for (let y = 0; y < height; y++) {
-				ctx.fillStyle = grid[x][y];
-				ctx.fillRect( x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE );
+				pos.y = y;
+				setPixel(pos, grid[x][y]);
 			}
 		}
 		canvasOpacity.set(1);
