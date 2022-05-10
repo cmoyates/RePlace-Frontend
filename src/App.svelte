@@ -4,9 +4,8 @@
 	import { tweened } from "svelte/motion";
 	import { cubicOut } from 'svelte/easing';
 
-	let canvas: HTMLCanvasElement;
-	let ctx: CanvasRenderingContext2D;
 
+	// Animation stuff
 	let footerOpacity = tweened(0.05, {
 		duration: 300,
 		easing: cubicOut
@@ -16,6 +15,26 @@
 		easing: cubicOut
 	});
 
+
+	// Canvas related variables
+	let canvas: HTMLCanvasElement;
+	let ctx: CanvasRenderingContext2D;
+	// Set those variables when everything loads
+	onMount( async () => {
+		canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
+		ctx = canvas.getContext("2d");
+	});
+
+	// Place a pixel when a user clicks on the canvas
+	function placePixel(event) {
+		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
+		setPixel(mousePos, COLORS[currentColor]);
+		// Tell the backend that a pixel was placed
+		socket.emit("place-pixel", mousePos, COLORS[currentColor]);
+	}
+
+
+	// Some constants
 	const PIXEL_SIZE: number = 15;
 	const COLORS: string[] = [
 		"#ff0000",
@@ -27,11 +46,16 @@
 		"#ffffff",
 		"#000000"
 	]
+
+	// Start with the first color selected
 	let currentColor: number = 0;
 
+
+	// Connect to backend websocket
 	const BACKEND_URL = JSON.parse(JSON.stringify(process)).env.BACKEND_URL || "http://localhost:5000";
 	let socket: Socket = io(BACKEND_URL);
 
+	// Initialize the canvas to the current backend values
 	socket.on("init", (grid: string[][]) => {
 		const width = grid.length;
 		const height = grid[0].length;
@@ -43,17 +67,17 @@
 				setPixel(pos, grid[x][y]);
 			}
 		}
+		// Make the canvas visible
 		canvasOpacity.set(1);
 	})
 
+	// When another user places a pixel reflect it on this frontend
 	socket.on("pixel-placed-by-user", (pos, color) => {
 		setPixel(pos, color);
 	});
-	
-	onMount( async () => {
-		canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
-		ctx = canvas.getContext("2d");
-	});
+
+
+	// Some helper functions
 
 	// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
 	function setPixel(pos, color) {
@@ -69,18 +93,12 @@
 			y: Math.floor((event.clientY - rect.top) / pixelSize)
 		};
 	}
-
-	function placePixel(event) {
-		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
-		setPixel(mousePos, COLORS[currentColor]);
-
-		socket.emit("place-pixel", mousePos, COLORS[currentColor]);
-	}
 </script>
 
 <main>
 	<h1>Re/<span class="place">Place</span></h1>
 	<p>A remake of <a href="https://www.reddit.com/r/place/">r/Place</a></p>
+	<!-- Call placePixel on click and have opacity controlled by the variable -->
 	<canvas 
 		id="myCanvas"
 		width="960" 
@@ -89,11 +107,13 @@
 		style="opacity:{$canvasOpacity}"
 	/>
 </main>
+<!-- Opacity controlled by the variable and changed on mouseover -->
 <footer
 	style="opacity:{$footerOpacity}"
 	on:mouseenter={() => {footerOpacity.set(1)}}
 	on:mouseleave={() => {footerOpacity.set(0.05)}}
 >
+	<!-- A button for each color from the constant array -->
 	{#each COLORS as color, index}
 		<div 
 			class="colorButton" 

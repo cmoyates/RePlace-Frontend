@@ -3926,7 +3926,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (85:1) {#each COLORS as color, index}
+    // (100:1) {#each COLORS as color, index}
     function create_each_block(ctx) {
     	let div;
     	let div_id_value;
@@ -3943,7 +3943,7 @@ var app = (function () {
     			attr_dev(div, "class", "colorButton svelte-1c960ta");
     			attr_dev(div, "style", "background-color:" + /*color*/ ctx[15]);
     			attr_dev(div, "id", div_id_value = /*currentColor*/ ctx[0] === /*index*/ ctx[17] && "selected");
-    			add_location(div, file, 85, 2, 2469);
+    			add_location(div, file, 100, 2, 3141);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3971,7 +3971,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(85:1) {#each COLORS as color, index}",
+    		source: "(100:1) {#each COLORS as color, index}",
     		ctx
     	});
 
@@ -3993,7 +3993,7 @@ var app = (function () {
     	let footer;
     	let mounted;
     	let dispose;
-    	let each_value = /*COLORS*/ ctx[5];
+    	let each_value = /*COLORS*/ ctx[6];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -4023,23 +4023,23 @@ var app = (function () {
     			}
 
     			attr_dev(span, "class", "place svelte-1c960ta");
-    			add_location(span, file, 69, 8, 2057);
+    			add_location(span, file, 81, 8, 2523);
     			attr_dev(h1, "class", "svelte-1c960ta");
-    			add_location(h1, file, 69, 1, 2050);
+    			add_location(h1, file, 81, 1, 2516);
     			attr_dev(a, "href", "https://www.reddit.com/r/place/");
-    			add_location(a, file, 70, 16, 2111);
-    			add_location(p, file, 70, 1, 2096);
+    			add_location(a, file, 82, 16, 2577);
+    			add_location(p, file, 82, 1, 2562);
     			attr_dev(canvas_1, "id", "myCanvas");
     			attr_dev(canvas_1, "width", "960");
     			attr_dev(canvas_1, "height", "540");
     			set_style(canvas_1, "opacity", /*$canvasOpacity*/ ctx[1]);
     			attr_dev(canvas_1, "class", "svelte-1c960ta");
-    			add_location(canvas_1, file, 71, 1, 2170);
+    			add_location(canvas_1, file, 84, 1, 2715);
     			attr_dev(main, "class", "svelte-1c960ta");
-    			add_location(main, file, 68, 0, 2042);
+    			add_location(main, file, 80, 0, 2508);
     			set_style(footer, "opacity", /*$footerOpacity*/ ctx[2]);
     			attr_dev(footer, "class", "svelte-1c960ta");
-    			add_location(footer, file, 79, 0, 2296);
+    			add_location(footer, file, 93, 0, 2910);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4064,7 +4064,7 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(canvas_1, "click", /*placePixel*/ ctx[6], false, false, false),
+    					listen_dev(canvas_1, "click", /*placePixel*/ ctx[5], false, false, false),
     					listen_dev(footer, "mouseenter", /*mouseenter_handler*/ ctx[8], false, false, false),
     					listen_dev(footer, "mouseleave", /*mouseleave_handler*/ ctx[9], false, false, false)
     				];
@@ -4077,8 +4077,8 @@ var app = (function () {
     				set_style(canvas_1, "opacity", /*$canvasOpacity*/ ctx[1]);
     			}
 
-    			if (dirty & /*COLORS, currentColor*/ 33) {
-    				each_value = /*COLORS*/ ctx[5];
+    			if (dirty & /*COLORS, currentColor*/ 65) {
+    				each_value = /*COLORS*/ ctx[6];
     				validate_each_argument(each_value);
     				let i;
 
@@ -4145,14 +4145,32 @@ var app = (function () {
     	let $footerOpacity;
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
-    	let canvas;
-    	let ctx;
     	let footerOpacity = tweened(0.05, { duration: 300, easing: cubicOut });
     	validate_store(footerOpacity, 'footerOpacity');
     	component_subscribe($$self, footerOpacity, value => $$invalidate(2, $footerOpacity = value));
     	let canvasOpacity = tweened(0, { duration: 400, easing: cubicOut });
     	validate_store(canvasOpacity, 'canvasOpacity');
     	component_subscribe($$self, canvasOpacity, value => $$invalidate(1, $canvasOpacity = value));
+
+    	// Canvas related variables
+    	let canvas;
+
+    	let ctx;
+
+    	// Set those variables when everything loads
+    	onMount(async () => {
+    		canvas = document.getElementById("myCanvas");
+    		ctx = canvas.getContext("2d");
+    	});
+
+    	// Place a pixel when a user clicks on the canvas
+    	function placePixel(event) {
+    		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
+    		setPixel(mousePos, COLORS[currentColor]);
+
+    		// Tell the backend that a pixel was placed
+    		socket.emit("place-pixel", mousePos, COLORS[currentColor]);
+    	}
 
     	const COLORS = [
     		"#ff0000",
@@ -4165,10 +4183,15 @@ var app = (function () {
     		"#000000"
     	];
 
+    	// Start with the first color selected
     	let currentColor = 0;
+
+    	// Connect to backend websocket
     	const BACKEND_URL = JSON.parse(JSON.stringify({"env":{"isProd":false,"BACKEND_URL":"https://replace-backend.herokuapp.com"}})).env.BACKEND_URL || "http://localhost:5000";
+
     	let socket = lookup(BACKEND_URL);
 
+    	// Initialize the canvas to the current backend values
     	socket.on("init", grid => {
     		const width = grid.length;
     		const height = grid[0].length;
@@ -4183,28 +4206,20 @@ var app = (function () {
     			}
     		}
 
+    		// Make the canvas visible
     		canvasOpacity.set(1);
     	});
 
+    	// When another user places a pixel reflect it on this frontend
     	socket.on("pixel-placed-by-user", (pos, color) => {
     		setPixel(pos, color);
     	});
 
-    	onMount(async () => {
-    		canvas = document.getElementById("myCanvas");
-    		ctx = canvas.getContext("2d");
-    	});
-
+    	// Some helper functions
     	// https://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
     	function setPixel(pos, color) {
     		ctx.fillStyle = color;
     		ctx.fillRect(pos.x * PIXEL_SIZE, pos.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
-    	}
-
-    	function placePixel(event) {
-    		let mousePos = getMousePos(canvas, event, PIXEL_SIZE);
-    		setPixel(mousePos, COLORS[currentColor]);
-    		socket.emit("place-pixel", mousePos, COLORS[currentColor]);
     	}
 
     	const writable_props = [];
@@ -4230,10 +4245,11 @@ var app = (function () {
     		io: lookup,
     		tweened,
     		cubicOut,
-    		canvas,
-    		ctx,
     		footerOpacity,
     		canvasOpacity,
+    		canvas,
+    		ctx,
+    		placePixel,
     		PIXEL_SIZE,
     		COLORS,
     		currentColor,
@@ -4241,16 +4257,15 @@ var app = (function () {
     		socket,
     		setPixel,
     		getMousePos,
-    		placePixel,
     		$canvasOpacity,
     		$footerOpacity
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ('canvas' in $$props) canvas = $$props.canvas;
-    		if ('ctx' in $$props) ctx = $$props.ctx;
     		if ('footerOpacity' in $$props) $$invalidate(3, footerOpacity = $$props.footerOpacity);
     		if ('canvasOpacity' in $$props) $$invalidate(4, canvasOpacity = $$props.canvasOpacity);
+    		if ('canvas' in $$props) canvas = $$props.canvas;
+    		if ('ctx' in $$props) ctx = $$props.ctx;
     		if ('currentColor' in $$props) $$invalidate(0, currentColor = $$props.currentColor);
     		if ('socket' in $$props) socket = $$props.socket;
     	};
@@ -4265,8 +4280,8 @@ var app = (function () {
     		$footerOpacity,
     		footerOpacity,
     		canvasOpacity,
-    		COLORS,
     		placePixel,
+    		COLORS,
     		click_handler,
     		mouseenter_handler,
     		mouseleave_handler
