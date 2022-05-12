@@ -12,7 +12,7 @@ You can take a look at the back-end here: https://github.com/cmoyates/RePlace-Ba
 - [x] Load pixels from backend grid on load
 - [x] Update canvas when another use places a pixel
 - [x] Be able to select pixel color
-- [ ] Canvas persistent through server restarts
+- [x] Canvas persistent through server restarts
 - [ ] Timer until user can place another pixel
 - [ ] Timer until reset
 - [ ] Save button
