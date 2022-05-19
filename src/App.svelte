@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { io, Socket } from "socket.io-client";
-	import { tweened } from "svelte/motion";
+	import { io, Socket } from 'socket.io-client';
+	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
+	import Footer from './components/Footer.svelte';
 
 
 	// Animation stuff
-	let footerOpacity = tweened(0.05, {
-		duration: 300,
-		easing: cubicOut
-	});
 	let canvasOpacity = tweened(0, {
 		duration: 400,
 		easing: cubicOut
@@ -107,22 +104,7 @@
 		style="opacity:{$canvasOpacity}"
 	/>
 </main>
-<!-- Opacity controlled by the variable and changed on mouseover -->
-<footer
-	style="opacity:{$footerOpacity}"
-	on:mouseenter={() => {footerOpacity.set(1)}}
-	on:mouseleave={() => {footerOpacity.set(0.05)}}
->
-	<!-- A button for each color from the constant array -->
-	{#each COLORS as color, index}
-		<div 
-			class="colorButton" 
-			style={"background-color:" + color}
-			id={currentColor === index && "selected"}
-			on:click={() => {currentColor = index}}
-		/>
-	{/each}
-</footer>
+<Footer colors={COLORS} bind:currentColor={currentColor}/>
 
 <style>
 	main {
@@ -147,29 +129,6 @@
 		border: 1px;
 		border-color: black;
 		border-style: solid;
-	}
-
-	.colorButton {
-		width: 3em;
-		height: 3em;
-		margin: 1em;
-	}
-
-	#selected {
-		border: 4px;
-		border-color: gray;
-		border-style: solid;
-	}
-
-	footer {
-		position: fixed;
-		bottom: 0;
-		background-color: #000000de;
-		width: 100%;
-		color: white;
-		align-items: center;
-		justify-content: center;
-		display: flex;
 	}
 
 	@media (min-width: 640px) {
