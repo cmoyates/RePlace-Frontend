@@ -54,6 +54,9 @@
 
 	// Initialize the canvas to the current backend values
 	socket.on("init", (grid: string[][]) => {
+		// Hide the error message if it's showing
+		error = false;
+		// Set the pixels on the canvas
 		const width = grid.length;
 		const height = grid[0].length;
 		let pos = {x: 0, y: 0};
@@ -71,6 +74,14 @@
 	// When another user places a pixel reflect it on this frontend
 	socket.on("pixel-placed-by-user", (pos, color) => {
 		setPixel(pos, color);
+	});
+
+
+	// Error handling
+	let error = false;
+
+	socket.io.on("error", () => {
+		error = true;
 	});
 
 
@@ -95,6 +106,9 @@
 <main>
 	<h1>Re/<span class="place">Place</span></h1>
 	<p>A remake of <a href="https://www.reddit.com/r/place/">r/Place</a></p>
+	{#if error}
+	<h2>ERROR - Could not connect to server</h2>
+	{/if}
 	<!-- Call placePixel on click and have opacity controlled by the variable -->
 	<canvas 
 		id="myCanvas"
@@ -119,6 +133,14 @@
 		font-size: 4em;
 		font-weight: 100;
 		margin-bottom: auto;
+	}
+
+	h2 {
+		text-transform: uppercase;
+		font-size: 2em;
+		font-weight: 200;
+		margin-bottom: auto;
+		color: #ff3e00;
 	}
 
 	.place {
