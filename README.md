@@ -8,8 +8,8 @@ You can take a look at the back-end here: https://github.com/cmoyates/RePlace-Ba
 ## How does it work?
 - There's a 2D grid of colors in the backend that gets reflected in the frontend whenever someone opens the page.
 - Whenever someone clicks on the canvas, a square of their selected color gets placed where they clicked, and a message gets sent to the server detailing what happened.
-- The server then updates its grid, and sends out messages to all of the other open frontends, telling them to make the same change on their canvases.
-- When the server shuts down, the current backend grid gets uploaded to a [MongoDB](https://www.mongodb.com/) database, and when the server starts up again, it loads the data back in from there.
+- The server then updates its grid, saves that update to the database, and sends out messages to all of the other open frontends, telling them to make the same change on their canvases.
+- Whenever the server restarts, it loads in any existing colors from a grid in a [MongoDB](https://www.mongodb.com/) database.
 
 ## To-Do
 - [x] Set pixels on canvas
