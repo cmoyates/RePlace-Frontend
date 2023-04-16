@@ -3,6 +3,7 @@
 	import { io } from 'socket.io-client';
 	import { socket } from '../stores';
 	import { getMousePos, setPixel } from '../utils';
+	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
 	const COLORS: string[] = [
 		'#ff0000',
@@ -25,7 +26,7 @@
 		canvas = document.getElementById('pixel-canvas') as HTMLCanvasElement;
 		ctx = canvas.getContext('2d');
 
-		$socket = io('http://localhost:5000');
+		$socket = io(PUBLIC_BACKEND_URL);
 
 		$socket?.on('connect', () => {
 			console.log('Connected!');
