@@ -21,6 +21,7 @@
 	let ctx: CanvasRenderingContext2D | null;
 
 	let currentColor: string = '#000000';
+	let mainOpacity: number = 0;
 
 	onMount(() => {
 		canvas = document.getElementById('pixel-canvas') as HTMLCanvasElement;
@@ -44,6 +45,7 @@
 					setPixel(pos, initialGrid[i][j], ctx);
 				}
 			}
+			mainOpacity = 1;
 		});
 
 		$socket?.on('pixel-placed', (pos: { x: number; y: number }, color: string) => {
@@ -76,8 +78,8 @@
 			href="https://www.reddit.com/r/place/">r/Place</a
 		>
 	</p>
-	<div class="mb-[18px] flex">
-		<div class="flex flex-col items-center justify-center space-y-4 p-4">
+	<div class="mb-[18px] mr-[18px] flex">
+		<div class="flex w-[68px] flex-col items-center justify-center space-y-4 p-4">
 			{#each COLORS as color}
 				<div class="flex">
 					<!-- svelte-ignore a11y-role-supports-aria-props -->
@@ -86,6 +88,7 @@
 							console.log('Set current color to:', color);
 							currentColor = color;
 						}}
+						style={`background-color: ${color}`}
 						class="
               h-8
               w-8
@@ -103,18 +106,20 @@
               aria-selected:opacity-100
               aria-selected:shadow-lg
             "
-						style={`background-color: ${color}`}
 						aria-selected={currentColor === color}
 					/>
 				</div>
 			{/each}
 		</div>
-		<canvas
-			id="pixel-canvas"
-			class="mr-[18px] border-2 border-black"
-			width="960"
-			height="540"
-			on:click={placePixel}
-		/>
+		<div class="border-2 border-black">
+			<canvas
+				id="pixel-canvas"
+				width="960"
+				height="540"
+				on:click={placePixel}
+				class="transition-opacity duration-500"
+				style={`opacity: ${mainOpacity}`}
+			/>
+		</div>
 	</div>
 </main>
